@@ -1,91 +1,125 @@
+#include <stdlib.h>
 #include<stdio.h>
 
 int main()
 {
-//sender
-int data[100], redundant[100], sent[100];
-int i;
-printf("Enter the 4 data bits : ");
+int a[4],b[4],r[3],s[3],i,q[3],c[7];
+printf("\nenter 4 bit data word:\n");
 for(i=3;i>=0;i--)
 {
-scanf("%d", &data[i]);
+scanf("%d",&a[i]);
 }
-redundant[0] = (data[0]+data[1]+data[3])%2;
-redundant[1] = (data[0]+data[2]+data[3])%2;
-redundant[2] = (data[1]+data[2]+data[3])%2;
-sent[0] = (redundant[0]+redundant[1]+redundant[2]+data[0]+data[1]+data[2]+data[3])%2;
-sent[1] = redundant[0];
-sent[2] = redundant[1];
-sent[3] = data[0];
-sent[4] = redundant[2];
-sent[5] = data[1];
-sent[6] = data[2];
-sent[7] = data[3];
-for(i=0;i<8;i++){
-printf(" %d",sent[i]);
+r[0]=(a[3]+a[1]+a[0])%2;
+r[1]=(a[0]+a[2]+a[3])%2;
+r[2]=(a[1]+a[2]+a[3])%2;
+
+printf("\n\nthe 7bit hamming code word: \n");
+for(i=3;i>=0;i--)
+{
+printf("%d\t",a[i]);
+}
+for(i=2;i>=0;i--)
+{
+printf("%d\t",r[i]);
 }
 printf("\n");
-//receiver
-int rcvd[100];
-printf("Enter the 8 bits received : ");
-for(i=0;i<=7;i++)
-{
-scanf("%d", &rcvd[i]);
-}
-int datar[100], redundantr[100], syndrome[100];
-datar[0] = rcvd[3];
-datar[1] = rcvd[5];
-datar[2] = rcvd[6];
-datar[3] = rcvd[7];
-redundantr[0] = rcvd[1];
-redundantr[1] = rcvd[2];
-redundantr[2] = rcvd[4];
-printf("Redundant : %d %d %d\nData received : %d %d %d %d", redundantr[0], redundantr[1], redundantr[2], datar[0], datar[1], datar[2], datar[3]);
-syndrome[0] = (redundantr[0]+datar[0]+datar[1]+datar[3])%2;
-syndrome[1] = (redundantr[1]+datar[0]+datar[2]+datar[3])%2;
-syndrome[2] = (redundantr[2]+datar[1]+datar[2]+datar[3])%2;
-printf("Syndrome bits : %d %d %d\n", syndrome[0], syndrome[1], syndrome[2]);
+printf("\nenter the 7bit recievedcodeword: ");
 
-if(syndrome[0]==0 && syndrome[1]==0 && syndrome[2]==0)
+for(i=7;i>0;i--)
+scanf	("%d",&c[i]);
+
+b[3]=c[7];b[2]=c[6];b[1]=c[5];b[0]=c[4];
+r[2]=c[3];r[1]=c[2];r[0]=c[1];
+
+//calculating syndrome bits
+s[0]=(b[0]+b[1]+b[3]+r[0])%2;
+s[1]=(b[0]+b[2]+b[3]+r[1])%2;
+s[2]=(b[1]+b[2]+b[3]+r[2])%2;
+printf("\nsyndrome is: \n");
+
+for(i=2;i>=0;i--)
 {
-	printf("packet is Error free");
+printf("%d",s[i]);
 }
-else if(syndrome[0]==0 && syndrome[1]==0 && syndrome[2]==1)
+if((s[2]==0) && (s[1]==0) && (s[0]==0))
+printf("\n RECIEVED WORD IS ERROR FREE\n");
+if((s[2]==1)&&(s[1]==1)&&(s[0]==1)) //Error in row 3 and 4, Error in row 2 and 4, hence, error in row 4. Error in col 2, hence error in 7th bit
 {
-	printf("Error in Bit 4");
-	rcvd[4] = (rcvd[4]==1)?0:1;
-}
-else if(syndrome[0]==0 && syndrome[1]==1 && syndrome[2]==0)
+printf("\nError in received codeword, position-  7th bit from right\n");
+if(c[7]==0)
+c[7]=1;
+else
+c[7]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
+
+}	
+if((s[2]==1)&&(s[1]==1)&&(s[0]==0))
 {
-	printf("Error in Bit 2");
-	rcvd[2] = (rcvd[2]==1)?0:1;
+printf("\nError in received codeword, Position-  6th bit from right\n");
+if(c[6]==0)
+c[6]=1;
+else
+c[6]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-else if(syndrome[0]==0 && syndrome[1]==1 && syndrome[2]==1)
+if((s[2]==1)&&(s[1]==0)&&(s[0]==1))
 {
-	printf("Error in Bit 6");
-	rcvd[6] = (rcvd[6]==1)?0:1;
+printf("\nError in received codeword, Position-  5th bit from right\n");
+if(c[5]==0)
+c[5]=1;
+else
+c[5]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-else if(syndrome[0]==1 && syndrome[1]==0 && syndrome[2]==0)
+if((s[2]==1)&&(s[1]==0)&&(s[0]==0))
 {
-	printf("Error in Bit 1");
-	rcvd[1] = (rcvd[1]==1)?0:1;
+printf("\nError in received codeword, Position-  4th bit from right\n");
+if(c[4]==0)
+c[4]=1;
+else
+c[4]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-else if(syndrome[0]==1 && syndrome[1]==0 && syndrome[2]==1)
+if((s[2]==0)&&(s[1]==1)&&(s[0]==1))
 {
-	printf("Error in Bit 5");
-	rcvd[5] = (rcvd[5]==1)?0:1;
+printf("\nError in received codeword, Position-  3rd bit from right\n");
+if(c[3]==0)
+c[3]=1;
+else
+c[3]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-else if(syndrome[0]==1 && syndrome[1]==1 && syndrome[2]==0)
+if((s[2]==0)&&(s[1]==1)&&(s[0]==0))
 {
-	printf("Error in Bit 3");
-	rcvd[3] = (rcvd[3]==1)?0:1;
+printf("\nError in received codeword, Position-  2nd bit from right\n");
+if(c[2]==0)
+c[2]=1;
+else
+c[2]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-else if(syndrome[0]==1 && syndrome[1]==1 && syndrome[2]==1)
+if((s[2]==0)&&(s[1]==0)&&(s[0]==1))
 {
-	printf("Error in Bit 7");
-	rcvd[7] = (rcvd[7]==1)?0:1;
+printf("\nError in received codeword, Position-  1st bit from right\n");
+if(c[1]==0)
+c[1]	=1;
+else
+c[1]=0;
+printf("\n Corrected codeword is\n");
+for(i=7;i>0;i--)
+printf("%d \t", c[i]);
 }
-printf("Received data : ");
-for(i=0;i<8;i++)
-printf("%d\t", rcvd[i]);
-}
+return(1);
+}//End of Hamming code program*/
