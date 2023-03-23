@@ -1,61 +1,69 @@
-#include<stdio.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<unistd.h>
+#include<sys/types.h> 
+#include<sys/socket.h> 
+#include<sys/stat.h> 
+#include<stdio.h> 
+#include<stdlib.h> 
+#include<fcntl.h> 
+#include<unistd.h> 
+#include<netinet/in.h> 
 #include<arpa/inet.h>
-#include<stdlib.h>
-void str_echo(int connfd1,int connfd2)
-{
-	int n=1024,cont;
-	char *buf=malloc(n);
-	while(1)
-	{
-		//scanf("%s",buf);
-		if((cont=recv(connfd1,buf,n,0))>0)
-		{	send(connfd2,buf,cont,0);
-		cont=recv(connfd2,buf,n,0);
-			send(connfd1,buf,cont,0);
-		}
-		else
-		{
-			cont=recv(connfd2,buf,n,0);
-			send(connfd1,buf,cont,0);
-			cont=recv(connfd1,buf,n,0);
-			send(connfd2,buf,cont,0);
-		}
-		
-	}
-}
-int main()
-{
-	int sockfd,connfd1,connfd2,n,pid;
-	struct sockaddr_in servaddr,cliaddr;
-	if(sockfd=socket(AF_INET,SOCK_STREAM,0))
-		printf("\n Socket created");
-	
-	servaddr.sin_family=AF_INET;
-	servaddr.sin_port=htons(15001);
-	servaddr.sin_addr.s_addr=INADDR_ANY;
-	
-	
-	bind(sockfd,(struct sockaddr*)&servaddr,sizeof(servaddr));
-	listen(sockfd,3);
 
-	n=sizeof(struct sockaddr_in);
-		
-			while(1)
-			{
-				connfd1=accept(sockfd,(struct sockaddr *)&cliaddr,&n);
-				connfd2=accept(sockfd,(struct sockaddr *)&cliaddr,&n);
-				if((pid=fork())==0)
-				{
-					close(sockfd);
-					str_echo(connfd1,connfd2);
-					exit(0);
-				}
-			}
-			close(connfd1);
-			close(connfd2);
-	return 0;
+void str_echo(int connfd,int port)
+{ 
+    int n=1,bufsize = 1024,len; 
+    char *buff = malloc(bufsize); 
+    struct sockaddr_in addr;
+
+    do{
+        while((n=recv(connfd,buff,bufsize,0))>0)
+        { 
+            printf("From client connected to %d :",port); 
+            fputs(buff,stdout); 
+            printf("Reply to the client connected to %d :",port); 
+            fgets(buff,bufsize,stdin); 
+            send(connfd,buff,n,0); 
+        } 
+    }while(n>0);
+
+
 }
+
+
+int main()
+{ 
+    int listenfd,connfd,addrlen,pid; 
+    struct sockaddr_in address; 
+    if((listenfd = socket(AF_INET,SOCK_STREAM,0)) > 0)
+        printf("The socket was created\n"); 
+    else 
+        printf("Error in Socket creation\n");
+
+    address.sin_family = AF_INET; 
+    address.sin_addr.s_addr = INADDR_ANY; 
+    address.sin_port= htons(15002);
+
+    if( bind( listenfd,(struct sockaddr *)& address,sizeof(address)) ==0) 
+        printf("Binding Socket\n");
+
+    listen(listenfd, 3);
+
+    for(;;)
+    { 
+        addrlen = sizeof(struct sockaddr_in); 
+        connfd = accept(listenfd,(struct sockaddr *)& address,&addrlen);
+
+        if(connfd>0)
+            printf("A new client connected from port :%d \n",  address.sin_port); 
+        else 
+            printf("A new client's connection wasn't accepted\n");
+        
+        if((pid=fork())==0)
+        { 
+            close(listenfd); 
+            str_echo(connfd,address.sin_port); 
+            exit(0); 
+        } 
+        close(connfd); 
+    } 
+    return 0; 
+} 
